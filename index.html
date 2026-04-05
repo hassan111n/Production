@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Production Engineering Quiz | Suez University</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --primary-color: #38bdf8;
+            --secondary-color: #7dd3fc;
+            --text-color: #f1f5f9;
+            --success: #22c55e;
+            --error: #ef4444;
+            --border: #334155;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 650px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .quiz-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+            border: 1px solid var(--border);
+            position: relative;
+            min-height: 350px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .progress-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background: #2d3748;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            width: 0%;
+            transition: width 0.4s ease;
+        }
+
+        .q-header {
+            color: var(--primary-color);
+            font-weight: 700;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+        }
+
+        h2 { 
+            font-size: 1.35rem; 
+            margin-bottom: 35px; 
+            line-height: 1.6; 
+            font-weight: 500;
+            min-height: 80px;
+        }
+
+        .options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        button.choice-btn {
+            padding: 16px;
+            border-radius: 12px;
+            border: 2px solid var(--border);
+            background: rgba(255, 255, 255, 0.03);
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        button.choice-btn:hover:not(:disabled) {
+            border-color: var(--primary-color);
+            background: rgba(56, 189, 248, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .correct-ans { 
+            background: var(--success) !important; 
+            border-color: var(--success) !important;
+            color: #fff !important;
+        }
+
+        .wrong-ans { 
+            background: var(--error) !important; 
+            border-color: var(--error) !important;
+            color: #fff !important;
+        }
+
+        #next-btn {
+            margin-top: 35px;
+            background: var(--primary-color);
+            color: #0f172a;
+            border: none;
+            padding: 14px;
+            border-radius: 12px;
+            width: 100%;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            display: none;
+            transition: 0.3s;
+        }
+
+        #next-btn:hover {
+            background: var(--secondary-color);
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+        }
+
+        .footer-info {
+            margin-top: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+            color: #94a3b8;
+        }
+
+        .score-val { color: var(--secondary-color); font-weight: bold; }
+
+        #final-screen { display: none; }
+
+        /* Animations */
+        .fade-in { animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="quiz-box" class="quiz-card fade-in">
+        <div class="progress-container">
+            <div id="progress" class="progress-bar"></div>
+        </div>
+        
+        <div id="question-area">
+            <div id="q-num" class="q-header">Question 1 of 60</div>
+            <h2 id="q-text">Loading...</h2>
+            
+            <div class="options">
+                <button onclick="handleAnswer(true)" id="true-btn" class="choice-btn">True</button>
+                <button onclick="handleAnswer(false)" id="false-btn" class="choice-btn">False</button>
+            </div>
+            
+            <button id="next-btn" onclick="showNextQuestion()">Next Question →</button>
+        </div>
+    </div>
+
+    <div id="final-screen" class="quiz-card fade-in">
+        <h1 style="color: var(--primary-color); margin-bottom: 10px;">Quiz Completed!</h1>
+        <p style="font-size: 1.1rem; color: #94a3b8; margin-bottom: 30px;">Great job reviewing the material.</p>
+        <div style="font-size: 3rem; font-weight: 700; margin-bottom: 10px;">
+            <span id="final-score" style="color: var(--success);">0</span><span style="font-size: 1.5rem; color: #94a3b8;">/60</span>
+        </div>
+        <button onclick="location.reload()" style="margin-top: 20px; background: white; color: black; border: none; padding: 15px 40px; border-radius: 12px; font-weight: 700; cursor: pointer;">Restart Quiz</button>
+    </div>
+
+    <div class="footer-info" id="footer-stats">
+        <span>Suez University | Faculty of Petroleum Engineering</span>
+        <span>Live Score: <span id="live-score" class="score-val">0</span></span>
+    </div>
+</div>
+
+<script>
+    const questions = [
+        { q: "The common feature in the material removal processes is the removal of material from a starting work part so the remaining part has the desired geometry.", a: true },
+        { q: "Machining provides the final shape, dimensions, finish, and special geometric details that other processes cannot create.", a: true },
+        { q: "If tensile force is applied, ductile materials can be stretched into a wire, but if compressive force is applied, they can be deformed into sheets.", a: true },
+        { q: "Boring is an external turning operation.", a: false },
+        { q: "In Bar Machines, long bar stock is allowed to be fed through headstock.", a: true },
+        { q: "In face turning, the feed motion is parallel to the workpart axis.", a: false },
+        { q: "Jig is a work holding device that is usually custom and designed for a particular work part.", a: true },
+        { q: "The motion of the worktable in the shaper is the main cutting motion.", a: false },
+        { q: "Both the shaper and the planer have crossrails.", a: true },
+        { q: "Face milling operations can be done on a vertical milling machine.", a: true },
+        { q: "Fixture provides a means of guiding the tool during drilling.", a: false },
+        { q: "Profile milling generally involves the milling of the outside periphery of a flat part.", a: true },
+        { q: "Turning is a machining process in which a single-point tool removes material from the surface of a rotating tool.", a: false },
+        { q: "Knurling is performed on a lathe, but it is not a metal cutting operation.", a: true },
+        { q: "A tapping operation is performed on a turning machine and produces an external thread, while threading is normally performed on a drilling machine and produces an internal thread.", a: false },
+        { q: "Rotational parts are cylindrical or disk-shaped and are machined on a drilling machine.", a: false },
+        { q: "Ductile materials are materials that break as opposed to bending.", a: false },
+        { q: "Profile milling is an example of machining operations that generate shapes.", a: true },
+        { q: "Generating part geometry in machining is determined by the shape of the cutting tool.", a: false },
+        { q: "Contour turning is an example of machining operations that generate shapes.", a: true },
+        { q: "Profile milling is an example of machining operations that form shapes.", a: false },
+        { q: "The Automatic Screw Machine is the same as the automatic bar machine but larger.", a: false },
+        { q: "In Chucking Machine, At the end of the machining cycle, a cutoff operation separates the new part.", a: false },
+        { q: "Vertical boring machines are used for heavy work parts that have low height/diameter (L/D) ratio.", a: true },
+        { q: "Bar machines are not highly automated machines.", a: false },
+        { q: "In turret lathe, the operator's job is to load and unload parts only.", a: false },
+        { q: "In turning, the feed and main motions are in the same direction.", a: false },
+        { q: "The reciprocating motion of the RAM is the main cutting motion in the shaper.", a: true },
+        { q: "Machining operation are Interrupted cutting operations.", a: false },
+        { q: "Axis of tool rotation is perpendicular to feed direction in turning.", a: false },
+        { q: "Milling is a machining operation in which work is fed past a rotating tool with multiple cutting edges.", a: true },
+        { q: "In peripheral milling, the cutter axis is parallel to surface being machined.", a: true },
+        { q: "In face milling, the cutter axis is parallel to surface being machined.", a: false },
+        { q: "The speed motion in the vertical knee-and-column milling machine is a rotational motion around a vertical axis.", a: false },
+        { q: "The cutting tool in drilling is called a drill or drill bit and it is a single edge cutting tool.", a: false },
+        { q: "Boring can only enlarge an existing hole.", a: true },
+        { q: "In case of blind hole, drill does not exit opposite side.", a: true },
+        { q: "Shaping and Planing are Similar operations, both use a single point cutting tool moved linearly relative to the work part.", a: true },
+        { q: "A straight, flat surface is created in shaping operation.", a: true },
+        { q: "The motion of the worktable in the planer is the main cutting motion.", a: true },
+        { q: "Slot milling is an example of machining operations that form and generate shapes.", a: true },
+        { q: "Thread cutting on a lathe is an example of machining operations that generate shapes.", a: true },
+        { q: "In turning; a single point cutting tool removes material from a rotating workpiece to generate block-like shapes.", a: false },
+        { q: "At low loads, Ductile materials will come back to their old shape after the load is lifted.", a: true },
+        { q: "Brittle materials are materials that can be plastically twisted with no crack.", a: false },
+        { q: "The Automatic Screw Machine is the same as the automatic bar machine but smaller.", a: true },
+        { q: "Pocket milling uses an end milling cutter to machine a shallow cavity (pocket) into a flat workpart.", a: true },
+        { q: "Boring produces an internal cylindrical shape from an existing hole, while turning produces an external cylindrical shape.", a: true },
+        { q: "Machining is generally performed before processes such as casting and forging.", a: false },
+        { q: "Discontinuous chips may be formed even in continuous process like turning.", a: true },
+        { q: "Drill jig provides a means of guiding the tool during drilling.", a: true },
+        { q: "Generating part geometry in machining is not determined by the shape of the cutting tool.", a: true },
+        { q: "The motion of the worktable in the planer is not the main cutting motion.", a: false },
+        { q: "The speed motion in the vertical knee-and-column milling machine is a rotational motion around a horizontal axis.", a: false },
+        { q: "Good examples of machining processes by a sharp cutting tool are turning, milling, and drilling.", a: true },
+        { q: "Ductile materials are materials that can be plastically twisted with no crack.", a: true },
+        { q: "Bar machines are highly automated machines.", a: true },
+        { q: "Thread cutting on a lathe is an example of machining operations that form and generate shapes.", a: true },
+        { q: "In face milling, the cutter axis is not parallel to the surface being machined.", a: true },
+        { q: "The speed motion in the vertical knee-and-column milling machine is not a rotational motion around a vertical axis.", a: false }
+    ];
+
+    let currentIndex = 0;
+    let score = 0;
+
+    const qText = document.getElementById('q-text');
+    const qNum = document.getElementById('q-num');
+    const nextBtn = document.getElementById('next-btn');
+    const liveScore = document.getElementById('live-score');
+    const progress = document.getElementById('progress');
+    const trueBtn = document.getElementById('true-btn');
+    const falseBtn = document.getElementById('false-btn');
+
+    function loadQuestion() {
+        if (currentIndex < questions.length) {
+            const currentQ = questions[currentIndex];
+            qText.innerText = currentQ.q;
+            qNum.innerText = `Question ${currentIndex + 1} of ${questions.length}`;
+            progress.style.width = `${(currentIndex / questions.length) * 100}%`;
+            
+            // Reset buttons
+            trueBtn.className = "choice-btn";
+            falseBtn.className = "choice-btn";
+            trueBtn.disabled = false;
+            falseBtn.disabled = false;
+            nextBtn.style.display = "none";
+        } else {
+            showFinalResults();
+        }
+    }
+
+    window.handleAnswer = function(userChoice) {
+        const correct = questions[currentIndex].a;
+        trueBtn.disabled = true;
+        falseBtn.disabled = true;
+
+        if (userChoice === correct) {
+            score++;
+            if(userChoice) trueBtn.classList.add('correct-ans');
+            else falseBtn.classList.add('correct-ans');
+        } else {
+            if(userChoice) trueBtn.classList.add('wrong-ans');
+            else falseBtn.classList.add('wrong-ans');
+            
+            // Highlight correct answer
+            if(correct) trueBtn.classList.add('correct-ans');
+            else falseBtn.classList.add('correct-ans');
+        }
+
+        liveScore.innerText = score;
+        nextBtn.style.display = "block";
+    };
+
+    window.showNextQuestion = function() {
+        currentIndex++;
+        const box = document.getElementById('quiz-box');
+        box.classList.remove('fade-in');
+        void box.offsetWidth; 
+        box.classList.add('fade-in');
+        loadQuestion();
+    };
+
+    function showFinalResults() {
+        document.getElementById('quiz-box').style.display = 'none';
+        document.getElementById('footer-stats').style.display = 'none';
+        document.getElementById('final-screen').style.display = 'flex';
+        document.getElementById('final-score').innerText = score;
+        // Progress bar to 100%
+        progress.style.width = '100%';
+    }
+
+    loadQuestion();
+</script>
+
+</body>
+</html>
